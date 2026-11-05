@@ -48,6 +48,10 @@ Os dois agentes:
 - **pausam sozinhos** quando um atendente humano assume a conversa;
 - movem o lead no **funil do Kommo** de acordo com a conversa.
 
+| Agente de recepção em ação (teste) | Cenário do agente 1 no Make |
+|---|---|
+| ![IA de recepção no WhatsApp](docs/kommo-ia-recepcao.png) | ![Cenário do agente no Make](docs/make-agente-atendimento.png) |
+
 A estrutura dos prompts e as técnicas usadas estão em [`prompts/estrutura-dos-prompts.md`](prompts/estrutura-dos-prompts.md).
 
 ### Automações da jornada do paciente
@@ -58,6 +62,14 @@ A estrutura dos prompts e as técnicas usadas estão em [`prompts/estrutura-dos-
 | **Lembretes de consulta** | Todo dia às 8h | Envia pedido de confirmação 2 dias antes, lembrete na véspera e no dia. Quem ainda não confirmou recebe nova mensagem. |
 | **Reagendamento de faltas** | Lead muda de etapa no Kommo | Atualiza o status da consulta no Clinicorp. |
 | **Pesquisa NPS** | De hora em hora, em horário comercial | Envia a pesquisa de satisfação depois do atendimento, uma única vez por consulta. |
+
+![Cenário de lembretes no Make](docs/make-lembretes.png)
+
+| Pedido de confirmação automático | Pesquisa NPS depois da consulta |
+|---|---|
+| ![Confirmação de consulta](docs/kommo-confirmacao.png) | ![Pesquisa NPS](docs/kommo-nps.png) |
+
+*Nomes e fotos dos pacientes foram borrados.*
 
 A estrutura de cada cenário (módulos, rotas e filtros, sem dados sensíveis) está na pasta [`cenarios/`](cenarios/).
 
