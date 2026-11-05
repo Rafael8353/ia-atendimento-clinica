@@ -1,0 +1,27 @@
+{
+ "cenario": "Quando o paciente confirma a consulta pelo WhatsApp, a confirmação é gravada automaticamente no sistema da clínica (Clinicorp).",
+ "gatilho": "Webhook do Kommo (lead entra na etapa \"confirmado\")",
+ "observacao": "Estrutura do cenário exportada do Make. Credenciais, IDs, URLs e dados da clínica foram removidos.",
+ "fluxo": [
+  {
+   "descricao": "Webhook (gatilho)"
+  },
+  {
+   "descricao": "Kommo: ler lead"
+  },
+  {
+   "descricao": "Iterador: campos personalizados do lead"
+  },
+  {
+   "descricao": "Iterador",
+   "filtro": "Campo \"Clinicorp AppointmentID\""
+  },
+  {
+   "descricao": "HTTP: Clinicorp confirm_appointment (POST)"
+  },
+  {
+   "descricao": "Registro de erro",
+   "filtro": "Erro real do Clinicorp (ignora \"já foi alterado\")"
+  }
+ ]
+}

@@ -1,0 +1,48 @@
+{
+ "cenario": "Depois do atendimento, envia a pesquisa de satisfação (NPS) uma única vez por consulta.",
+ "gatilho": "Agendado: a cada hora, em horário comercial",
+ "observacao": "Estrutura do cenário exportada do Make. Credenciais, IDs, URLs e dados da clínica foram removidos.",
+ "fluxo": [
+  {
+   "descricao": "HTTP: Clinicorp lista consultas do dia"
+  },
+  {
+   "descricao": "Iterador"
+  },
+  {
+   "descricao": "Data store: já foi enviado?",
+   "filtro": "Atendido recentemente (ou fechamento do dia)"
+  },
+  {
+   "descricao": "Kommo: buscar contato pelo telefone",
+   "filtro": "Novo (ainda não processado) e com celular válido"
+  },
+  {
+   "descricao": "Roteador",
+   "rotas": [
+    [
+     {
+      "descricao": "Salesbot: pesquisa NPS",
+      "filtro": "Lead encontrado"
+     },
+     {
+      "descricao": "Data store: marcar como enviado"
+     }
+    ],
+    [
+     {
+      "descricao": "Normalizar telefone e buscar de novo",
+      "filtro": "Lead não encontrado"
+     },
+     {
+      "descricao": "Salesbot: pesquisa NPS",
+      "filtro": "Achou no retry"
+     },
+     {
+      "descricao": "Data store: marcar como enviado"
+     }
+    ]
+   ]
+  }
+ ]
+}

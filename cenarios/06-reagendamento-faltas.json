@@ -1,0 +1,23 @@
+{
+ "cenario": "Quando o lead vai para a etapa de falta/reagendamento no Kommo, atualiza o status da consulta no Clinicorp automaticamente.",
+ "gatilho": "Webhook do Kommo (mudança de etapa)",
+ "observacao": "Estrutura do cenário exportada do Make. Credenciais, IDs, URLs e dados da clínica foram removidos.",
+ "fluxo": [
+  {
+   "descricao": "Webhook (gatilho)"
+  },
+  {
+   "descricao": "Kommo: ler lead"
+  },
+  {
+   "descricao": "Iterador: campos personalizados"
+  },
+  {
+   "descricao": "Iterador",
+   "filtro": "Campo \"Clinicorp AppointmentID\""
+  },
+  {
+   "descricao": "HTTP: Clinicorp change_status"
+  }
+ ]
+}

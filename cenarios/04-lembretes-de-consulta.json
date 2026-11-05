@@ -1,0 +1,80 @@
+{
+ "cenario": "Todo dia às 8h busca as consultas dos próximos 2 dias e dispara a mensagem certa para cada paciente.",
+ "gatilho": "Agendado: diariamente às 08:00",
+ "observacao": "Estrutura do cenário exportada do Make. Credenciais, IDs, URLs e dados da clínica foram removidos.",
+ "fluxo": [
+  {
+   "descricao": "HTTP: Clinicorp lista consultas de hoje até D+2"
+  },
+  {
+   "descricao": "Iterador"
+  },
+  {
+   "descricao": "Agregador de texto",
+   "filtro": "Consulta válida (D-2 qualquer; D-1 exceto \"Faltou\"; D0 confirmado/atendido)"
+  },
+  {
+   "descricao": "Iterador (ordenado)"
+  },
+  {
+   "descricao": "Kommo: buscar contato pelo telefone",
+   "filtro": "Só a primeira consulta do telefone no dia, com celular válido"
+  },
+  {
+   "descricao": "Definir variável: LeadId"
+  },
+  {
+   "descricao": "Roteador",
+   "rotas": [
+    [
+     {
+      "descricao": "Kommo: atualizar data/hora da consulta no lead",
+      "filtro": "Lead encontrado"
+     },
+     {
+      "descricao": "Roteador",
+      "rotas": [
+       [
+        {
+         "descricao": "Salesbot: pedido de confirmação",
+         "filtro": "D-2"
+        }
+       ],
+       [
+        {
+         "descricao": "Salesbot: lembrete",
+         "filtro": "D-1 confirmado/atendido"
+        }
+       ],
+       [
+        {
+         "descricao": "Salesbot: novo pedido de confirmação",
+         "filtro": "D-1 não confirmado"
+        }
+       ],
+       [
+        {
+         "descricao": "Salesbot: lembrete do dia",
+         "filtro": "D0"
+        }
+       ]
+      ]
+     }
+    ],
+    [
+     {
+      "descricao": "Normalizar telefone (com/sem 9º dígito)",
+      "filtro": "Lead não encontrado"
+     },
+     {
+      "descricao": "Kommo: buscar de novo"
+     },
+     {
+      "descricao": "Mesmas 4 rotas de mensagem",
+      "filtro": "Achou no retry"
+     }
+    ]
+   ]
+  }
+ ]
+}

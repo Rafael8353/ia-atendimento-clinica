@@ -1,0 +1,199 @@
+{
+ "cenario": "Agente de IA comercial: atende novos contatos no WhatsApp, tira dúvidas, qualifica e encaminha para agendamento.",
+ "gatilho": "Webhook do Kommo a cada mensagem recebida no WhatsApp",
+ "observacao": "Estrutura do cenário exportada do Make. Credenciais, IDs, URLs, prompts e dados da clínica foram removidos.",
+ "saida_estruturada_da_ia": {
+  "name": "resposta_ana",
+  "type": "json_schema",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "resposta": {
+     "type": "string",
+     "description": "A resposta em texto que a Ana envia ao cliente pelo WhatsApp"
+    },
+    "nome_cliente": {
+     "type": "string",
+     "description": "O nome do cliente, ou string vazia (\"\") se ainda não for conhecido"
+    },
+    "encaminhar_humano": {
+     "type": "boolean",
+     "description": "true se a conversa deve ser encaminhada para um atendente humano, false caso contrário"
+    },
+    "ja_e_paciente": {
+     "type": "string",
+     "enum": [
+      "sim",
+      "nao",
+      "nao_perguntado_ainda"
+     ],
+     "description": "Indica se o cliente já é paciente da clínica. Use \"nao_perguntado_ainda\" até essa pergunta ter sido feita e respondida pelo cliente."
+    }
+   },
+   "required": [
+    "resposta",
+    "nome_cliente",
+    "encaminhar_humano",
+    "ja_e_paciente"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "fluxo": [
+  {
+   "id": 2,
+   "modulo": "gateway:CustomWebHook",
+   "descricao": "Webhook (gatilho)"
+  },
+  {
+   "id": 14,
+   "modulo": "amo-crm:ActionReadLead",
+   "descricao": "Kommo: ler lead"
+  },
+  {
+   "id": 53,
+   "modulo": "datastore:GetRecord",
+   "descricao": "Data store: ler memória"
+  },
+  {
+   "id": 56,
+   "modulo": "builtin:BasicRouter",
+   "descricao": "Roteador",
+   "rotas": [
+    [
+     {
+      "id": 57,
+      "modulo": "amo-crm:MakeAPICall",
+      "descricao": "Kommo: chamada de API",
+      "filtro": "IA Pausada"
+     }
+    ],
+    [
+     {
+      "id": 25,
+      "modulo": "builtin:BasicRouter",
+      "descricao": "Roteador",
+      "filtro": "IA nao pausada",
+      "rotas": [
+       [
+        {
+         "id": 28,
+         "modulo": "amo-crm:MakeAPICall",
+         "descricao": "Kommo: chamada de API",
+         "filtro": "Lead Antigo"
+        }
+       ],
+       [
+        {
+         "id": 42,
+         "modulo": "builtin:BasicRouter",
+         "descricao": "Roteador",
+         "filtro": "Lead Novo",
+         "rotas": [
+          [
+           {
+            "id": 16,
+            "modulo": "builtin:BasicFeeder",
+            "descricao": "Iterador"
+           },
+           {
+            "id": 15,
+            "modulo": "amo-crm:ActionReadContact",
+            "descricao": "Kommo: ler contato",
+            "filtro": "Campo de Mensagem IA"
+           },
+           {
+            "id": 7,
+            "modulo": "datastore:GetRecord",
+            "descricao": "Data store: ler memória"
+           },
+           {
+            "id": 12,
+            "modulo": "openai-gpt-3:createModelResponse",
+            "descricao": "OpenAI: gerar resposta (Responses API)"
+           },
+           {
+            "id": 29,
+            "modulo": "json:ParseJSON",
+            "descricao": "JSON: interpretar resposta"
+           },
+           {
+            "id": 8,
+            "modulo": "datastore:AddRecord",
+            "descricao": "Data store: salvar memória"
+           },
+           {
+            "id": 34,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API"
+           },
+           {
+            "id": 46,
+            "modulo": "builtin:BasicRouter",
+            "descricao": "Roteador",
+            "rotas": [
+             [
+              {
+               "id": 45,
+               "modulo": "amo-crm:MakeAPICall",
+               "descricao": "Kommo: chamada de API",
+               "filtro": "Paciente"
+              },
+              {
+               "id": 58,
+               "modulo": "amo-crm:MakeAPICall",
+               "descricao": "Kommo: chamada de API"
+              }
+             ],
+             [
+              {
+               "id": 32,
+               "modulo": "amo-crm:MakeAPICall",
+               "descricao": "Kommo: chamada de API",
+               "filtro": "Encaminhar Humano"
+              },
+              {
+               "id": 54,
+               "modulo": "datastore:AddRecord",
+               "descricao": "Data store: salvar memória"
+              },
+              {
+               "id": 50,
+               "modulo": "util:FunctionSleep",
+               "descricao": "Pausa"
+              },
+              {
+               "id": 33,
+               "modulo": "amo-crm:MakeAPICall",
+               "descricao": "Kommo: chamada de API"
+              }
+             ],
+             [
+              {
+               "id": 9,
+               "modulo": "amo-crm:MakeAPICall",
+               "descricao": "Kommo: chamada de API",
+               "filtro": "Enviar resposta (nao e ja-paciente)"
+              }
+             ]
+            ]
+           }
+          ],
+          [
+           {
+            "id": 43,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API",
+            "filtro": "Follow-Up"
+           }
+          ]
+         ]
+        }
+       ]
+      ]
+     }
+    ]
+   ]
+  }
+ ]
+}

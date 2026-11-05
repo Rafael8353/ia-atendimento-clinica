@@ -1,0 +1,206 @@
+{
+ "cenario": "Agente de IA de recepção: identifica o motivo do contato de pacientes e direciona ao setor certo.",
+ "gatilho": "Webhook do Kommo a cada mensagem recebida no WhatsApp",
+ "observacao": "Estrutura do cenário exportada do Make. Credenciais, IDs, URLs, prompts e dados da clínica foram removidos.",
+ "saida_estruturada_da_ia": {
+  "name": "resposta_bia",
+  "type": "json_schema",
+  "schema": {
+   "type": "object",
+   "properties": {
+    "nome_cliente": {
+     "type": "string",
+     "description": "Nome do paciente. Preencha SEMPRE que o nome aparecer em qualquer ponto da conversa, no histórico ou na mensagem atual. Deixe vazio (\"\") apenas se o paciente nunca informou o nome."
+    },
+    "resposta": {
+     "type": "string",
+     "description": "A resposta em texto que a Bia envia ao paciente pelo WhatsApp"
+    },
+    "encaminhar_humano": {
+     "type": "boolean",
+     "description": "true se a conversa deve ser encaminhada para um setor humano, false caso contrário"
+    },
+    "destino": {
+     "type": "string",
+     "enum": [
+      "financeiro",
+      "agendamento",
+      "clinico_dor",
+      "clinico_protese",
+      "atendimento_geral",
+      "nenhum"
+     ],
+     "description": "Setor de destino quando encaminhar_humano é true. Use \"nenhum\" quando encaminhar_humano é false."
+    }
+   },
+   "required": [
+    "nome_cliente",
+    "resposta",
+    "encaminhar_humano",
+    "destino"
+   ],
+   "additionalProperties": false
+  }
+ },
+ "fluxo": [
+  {
+   "id": 1,
+   "modulo": "gateway:CustomWebHook",
+   "descricao": "Webhook (gatilho)"
+  },
+  {
+   "id": 2,
+   "modulo": "amo-crm:ActionReadLead",
+   "descricao": "Kommo: ler lead"
+  },
+  {
+   "id": 3,
+   "modulo": "datastore:GetRecord",
+   "descricao": "Data store: ler memória"
+  },
+  {
+   "id": 4,
+   "modulo": "builtin:BasicRouter",
+   "descricao": "Roteador",
+   "rotas": [
+    [
+     {
+      "id": 5,
+      "modulo": "amo-crm:MakeAPICall",
+      "descricao": "Kommo: chamada de API",
+      "filtro": "IA Pausada"
+     }
+    ],
+    [
+     {
+      "id": 6,
+      "modulo": "builtin:BasicFeeder",
+      "descricao": "Iterador",
+      "filtro": "IA nao pausada"
+     },
+     {
+      "id": 31,
+      "modulo": "amo-crm:ActionReadContact",
+      "descricao": "Kommo: ler contato",
+      "filtro": "Campo de Mensagem IA"
+     },
+     {
+      "id": 30,
+      "modulo": "datastore:GetRecord",
+      "descricao": "Data store: ler memória"
+     },
+     {
+      "id": 8,
+      "modulo": "openai-gpt-3:createModelResponse",
+      "descricao": "OpenAI: gerar resposta (Responses API)"
+     },
+     {
+      "id": 9,
+      "modulo": "json:ParseJSON",
+      "descricao": "JSON: interpretar resposta"
+     },
+     {
+      "id": 10,
+      "modulo": "datastore:AddRecord",
+      "descricao": "Data store: salvar memória"
+     },
+     {
+      "id": 11,
+      "modulo": "builtin:BasicRouter",
+      "descricao": "Roteador",
+      "rotas": [
+       [
+        {
+         "id": 12,
+         "modulo": "amo-crm:MakeAPICall",
+         "descricao": "Kommo: chamada de API",
+         "filtro": "Encaminhar Humano"
+        },
+        {
+         "id": 13,
+         "modulo": "datastore:AddRecord",
+         "descricao": "Data store: salvar memória"
+        },
+        {
+         "id": 14,
+         "modulo": "util:FunctionSleep",
+         "descricao": "Pausa"
+        },
+        {
+         "id": 15,
+         "modulo": "builtin:BasicRouter",
+         "descricao": "Roteador",
+         "rotas": [
+          [
+           {
+            "id": 16,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API",
+            "filtro": "Destino: financeiro"
+           }
+          ],
+          [
+           {
+            "id": 17,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API",
+            "filtro": "Destino: agendamento"
+           }
+          ],
+          [
+           {
+            "id": 18,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API",
+            "filtro": "Destino: clinico_dor"
+           }
+          ],
+          [
+           {
+            "id": 19,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API",
+            "filtro": "Destino: clinico_protese"
+           }
+          ],
+          [
+           {
+            "id": 20,
+            "modulo": "amo-crm:MakeAPICall",
+            "descricao": "Kommo: chamada de API",
+            "filtro": "Destino: atendimento_geral"
+           }
+          ]
+         ]
+        }
+       ],
+       [
+        {
+         "id": 24,
+         "modulo": "json:TransformToJSON",
+         "descricao": "json:TransformToJSON",
+         "filtro": "Enviar resposta"
+        },
+        {
+         "id": 21,
+         "modulo": "amo-crm:MakeAPICall",
+         "descricao": "Kommo: chamada de API"
+        },
+        {
+         "id": 22,
+         "modulo": "util:FunctionSleep",
+         "descricao": "Pausa"
+        },
+        {
+         "id": 23,
+         "modulo": "amo-crm:MakeAPICall",
+         "descricao": "Kommo: chamada de API"
+        }
+       ]
+      ]
+     }
+    ]
+   ]
+  }
+ ]
+}
