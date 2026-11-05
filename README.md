@@ -87,4 +87,4 @@ A estrutura de cada cenário (módulos, rotas e filtros, sem dados sensíveis) e
 
 ---
 
-Feito por **Rafael da Silveira Gonçales** · [LinkedIn](https://www.linkedin.com/in/rafael-da-silveira-gonçales-971ab81b3) · [GitHub](https://github.com/Rafael8353)
+Feito por **Rafael da Silveira Gonçales** · [LinkedIn](https://www.linkedin.com/in/rafaelgoncales) · [GitHub](https://github.com/Rafael8353)
